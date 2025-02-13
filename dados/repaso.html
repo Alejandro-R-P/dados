@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lanzamiento de Dados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        img {
+            width: 50px;
+            height: 50px;
+        }
+        #resultados {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lanzamiento de Dados</h1>
+    <button onclick="lanzarAztualizar()">Lanzar</button>
+    <button onclick="VerResultado()">Ver Resultados</button>
+    <button onclick="borrarResultados()" style="background-color: red;">Borrar Resultados</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Dado 1</th>
+                <th>Dado 2</th>
+                <th>Suma</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><img id="dado1" src="./images/cara1.png" alt="Dado 1"></td>
+                <td><img id="dado2" src="./images/cara2.png" alt="Dado 2"></td>
+                <td id="suma">3</td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="resultados">Resultados anteriores:</div>
+
+    <script>
+        function lanzardado() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        async function lanzarAztualizar() {
+            let dado1 = lanzardado();
+            let dado2 = lanzardado();
+            let suma = dado1 + dado2;
+
+            document.getElementById('dado1').src = obtenerNombreImagen(dado1);
+            document.getElementById('dado2').src = obtenerNombreImagen(dado2);
+            document.getElementById('suma').innerHTML = suma;
+
+            try {
+                await fetch("https://67ae29749e85da2f020ca76a.mockapi.io/dados", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dado1, dado2, suma })
+                });
+            } catch (error) {
+                console.error("Error al subir datos", error);
+            }
+        }
+
+        function obtenerNombreImagen(valor) {
+            return `./images/cara${valor}.png`;
+        }
+
+        async function VerResultado() {
+            try {
+                let respuesta = await fetch('https://67ae29749e85da2f020ca76a.mockapi.io/dados');
+                let datos = await respuesta.json();
+
+                let texto = datos.map(element => element.suma).join(" - ");
+                document.getElementById("resultados").innerHTML = "Resultados anteriores: " + texto;
+            } catch (error) {
+                console.error("Error al obtener resultados", error);
+            }
+        }
+
+        async function borrarResultados() {
+            try {
+                let respuesta = await fetch('https://67ae29749e85da2f020ca76a.mockapi.io/dados');
+                let datos = await respuesta.json();
+
+                for (let dato of datos) {
+                    await fetch(`https://67ae29749e85da2f020ca76a.mockapi.io/dados/${dato.id}`, {
+                        method: 'DELETE'
+                    });
+                }
+                document.getElementById("resultados").innerHTML = "Resultados anteriores: ";
+            } catch (error) {
+                console.error("Error al borrar resultados", error);
+            }
+        }
+    </script>
+</body>
+</html>
